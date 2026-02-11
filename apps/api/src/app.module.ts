@@ -9,6 +9,7 @@ import { BookingsModule } from './bookings/bookings.module';
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
+      url: process.env.DATABASE_URL,
       host: process.env.DB_HOST || 'localhost',
       port: parseInt(process.env.DB_PORT || '5432'),
       username: process.env.DB_USERNAME || 'postgres',
@@ -16,6 +17,7 @@ import { BookingsModule } from './bookings/bookings.module';
       database: process.env.DB_NAME || 'myskillstore',
       autoLoadEntities: true,
       synchronize: true, // Dev only — use migrations in production
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     }),
     JwtModule.register({
       global: true,
