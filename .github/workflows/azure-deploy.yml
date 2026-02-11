@@ -1,4 +1,4 @@
-name: Deploy to Azure Web App
+name: Deploy to Azure Web Apps
 
 on:
   push:
@@ -8,11 +8,11 @@ on:
 
 env:
   AZURE_WEBAPP_NAME: setup-service-web
-  AZURE_WEBAPP_PACKAGE_PATH: '.'
+  AZURE_API_NAME: setup-service-api
   NODE_VERSION: '20.x'
 
 jobs:
-  build-and-deploy:
+  build-and-deploy-web:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -31,23 +31,61 @@ jobs:
         cd apps/web
         npm run build
         
-    - name: Prepare Deployment Package
+    - name: Prepare Web Package
       run: |
-        mkdir -p deploy
-        # 复制 standalone 输出的所有内容
-        cp -r apps/web/.next/standalone/. deploy/
-        # 复制静态资源（这在 standalone 模式下通常是必需的）
-        cp -r apps/web/public deploy/apps/web/public || true
-        cp -r apps/web/.next/static deploy/apps/web/.next/static || true
+        mkdir -p deploy_web
+        cp -r apps/web/.next/standalone/. deploy_web/
+        cp -r apps/web/public deploy_web/apps/web/public || true
+        cp -r apps/web/.next/static deploy_web/apps/web/.next/static || true
         
-    - name: Archive artifacts
+    - name: Archive Web
       run: |
-        cd deploy
-        zip -r ../release.zip .
+        cd deploy_web
+        zip -r ../release_web.zip .
 
-    - name: Deploy to Azure Web App
+    - name: Deploy Web to Azure
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: release.zip
+        package: release_web.zip
+
+  build-and-deploy-api:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install Dependencies
+      run: npm ci
+
+    - name: Build API
+      run: |
+        cd apps/api
+        npm run build
+        
+    - name: Prepare API Package
+      run: |
+        mkdir -p deploy_api
+        cp -r apps/api/dist deploy_api/
+        cp apps/api/package.json deploy_api/
+        # 安装生产依赖
+        cd deploy_api
+        npm install --production
+        
+    - name: Archive API
+      run: |
+        cd deploy_api
+        zip -r ../release_api.zip .
+
+    - name: Deploy API to Azure
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_API_NAME }}
+        publish-profile: ${{ secrets.AZURE_API_PUBLISH_PROFILE }}
+        package: release_api.zip
