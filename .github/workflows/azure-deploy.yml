@@ -30,18 +30,24 @@ jobs:
       run: |
         cd apps/web
         npm run build
-        # 移动构建产物到根目录准备部署
-        mkdir -p ../../deploy
-        cp -r .next ../../deploy/.next
-        cp -r public ../../deploy/public
-        cp package.json ../../deploy/package.json
-        # 注意：Next.js 15 默认可能不生成 server.js，除非配置了 output: 'standalone'
-        # 我们这里暂时使用 next start 作为启动命令，或者检查 standalone 输出
-        cp -r .next/standalone/. ../../deploy/ || cp -r . ../../deploy/
         
+    - name: Prepare Deployment Package
+      run: |
+        mkdir -p deploy
+        # 复制 standalone 输出的所有内容
+        cp -r apps/web/.next/standalone/. deploy/
+        # 复制静态资源（这在 standalone 模式下通常是必需的）
+        cp -r apps/web/public deploy/apps/web/public || true
+        cp -r apps/web/.next/static deploy/apps/web/.next/static || true
+        
+    - name: Archive artifacts
+      run: |
+        cd deploy
+        zip -r ../release.zip .
+
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: apps/web
+        package: release.zip
