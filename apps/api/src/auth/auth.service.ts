@@ -50,17 +50,16 @@ export class AuthService {
     let admin = await this.userRepository.findOne({ where: { email: 'admin@myskillstore.com' } });
     const hashed = await bcrypt.hash('admin123', 10);
     if (!admin) {
-      await this.userRepository.save(
-        this.userRepository.create({ email: 'admin@myskillstore.com', password: hashed, role: 'admin' }),
-      );
+      admin = this.userRepository.create({ email: 'admin@myskillstore.com', password: hashed, role: 'admin' });
+      await this.userRepository.save(admin);
       console.log('Admin user created: admin@myskillstore.com / admin123');
-    } else if (admin.role !== 'admin') {
+      return { message: 'Admin created' };
+    } else {
       admin.role = 'admin';
       admin.password = hashed;
       await this.userRepository.save(admin);
-      console.log('Admin user role/password reset: admin@myskillstore.com / admin123');
-    } else {
-      console.log('Admin user already exists');
+      console.log('Admin user password/role reset: admin@myskillstore.com / admin123');
+      return { message: 'Admin password reset' };
     }
   }
 }

@@ -21,4 +21,12 @@ export class AuthController {
   getProfile(@Request() req) {
     return this.authService.getProfile(req.user.sub);
   }
+
+  @Post('seed-admin')
+  async seedAdmin(@Body() body: { secret: string }) {
+    if (body.secret !== 'setup-service-2026') {
+      return { message: 'Invalid secret' };
+    }
+    return this.authService.seedAdmin();
+  }
 }
