@@ -11,6 +11,5 @@
       "source": "/api/:path*",
       "destination": "https://setup-service-api.azurewebsites.net/:path*"
     }
-  ],
-  "rootDirectory": "apps/web"
+  ]
 }
