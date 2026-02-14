@@ -75,9 +75,6 @@ export default function AdminLogin() {
               Sign In
             </Button>
           </form>
-          <p className="text-xs text-gray-400 text-center mt-4">
-            Default: admin@myskillstore.com / admin123
-          </p>
         </CardContent>
       </Card>
     </div>
